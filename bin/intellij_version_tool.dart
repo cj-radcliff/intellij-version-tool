@@ -6,6 +6,7 @@ void main(List<String> arguments) async {
   final parser = ArgParser()
     ..addOption('code', abbr: 'c', defaultsTo: 'IU', help: 'Product code (e.g., IU, IC, PS)')
     ..addOption('type', abbr: 't', defaultsTo: 'release', help: 'Release type (e.g., release, eap, beta)')
+    ..addOption('columns', abbr: 'C', help: 'Comma-separated list of additional columns to display (or "all")')
     ..addOption('output', abbr: 'o', help: 'Output file path (positional argument takes precedence)');
 
   final ArgResults argResults;
@@ -17,7 +18,6 @@ void main(List<String> arguments) async {
     exit(1);
   }
 
-  // Position 0 is the output file path, or use the --output option
   String? outputPath;
   if (argResults.rest.isNotEmpty) {
     outputPath = argResults.rest[0];
@@ -33,12 +33,18 @@ void main(List<String> arguments) async {
 
   final code = argResults['code'];
   final type = argResults['type'];
+  
+  List<String> extraColumns = [];
+  if (argResults.wasParsed('columns')) {
+    extraColumns = (argResults['columns'] as String).split(',').map((s) => s.trim()).toList();
+  }
 
   try {
     await tool.fetchAndSaveReleases(
       code: code,
       type: type,
       outputPath: outputPath,
+      extraColumns: extraColumns,
     );
   } catch (e) {
     exit(1);
